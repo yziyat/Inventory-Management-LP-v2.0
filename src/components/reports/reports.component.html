@@ -1,0 +1,127 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-slate-900">{{ t().reports.title }}</h1>
+     <button (click)="exportToExcel()" class="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-colors shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+      {{ t().common.export }}
+    </button>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow-md" [formGroup]="filterForm">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+      <div>
+        <label for="startDate" class="block mb-2 text-sm font-medium text-slate-900">{{ t().reports.startDate }}</label>
+        <input type="date" id="startDate" formControlName="startDate" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+      </div>
+      <div>
+        <label for="endDate" class="block mb-2 text-sm font-medium text-slate-900">{{ t().reports.endDate }}</label>
+        <input type="date" id="endDate" formControlName="endDate" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+      </div>
+       <div class="md:col-span-2">
+        <label for="articleId" class="block mb-2 text-sm font-medium text-slate-900">{{ t().reports.articleLabel }}</label>
+        <select id="articleId" formControlName="articleId" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+          <option value="">{{ t().reports.allArticles }}</option>
+          @for (article of articles(); track article.id) {
+            <option [value]="article.id">{{ article.name }} ({{ article.code }})</option>
+          }
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="resetFilters()" [title]="t().common.resetFilters" class="p-2.5 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.667 0l3.181-3.183m-4.991-2.691v4.992m0 0h-4.992m4.992 0-3.181-3.183a8.25 8.25 0 0 0-11.667 0L2.985 16.644Z" /></svg>
+        </button>
+        <button (click)="generateReport()" [disabled]="filterForm.invalid" class="flex-grow px-4 py-2.5 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition-colors shadow-sm disabled:bg-indigo-300">{{ t().reports.generate }}</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto bg-white rounded-xl shadow-md">
+    @if (reportData(); as data) {
+      @if (data.length > 0) {
+        <table class="w-full text-sm text-left text-slate-500 whitespace-nowrap">
+          <thead class="text-xs text-white uppercase bg-slate-800 sticky top-0">
+            <tr>
+              <th scope="col" class="px-3 py-3">{{ t().reports.table.article }}</th>
+              <th scope="col" class="px-3 py-3">{{ t().reports.table.code }}</th>
+              <th scope="col" class="px-3 py-3 text-center">{{ t().reports.table.initialStock }}</th>
+              <th scope="col" class="px-3 py-3 text-center bg-green-800">{{ t().reports.table.totalIn }}</th>
+              @for(dest of reportDestinations(); track dest) {
+                <th scope="col" class="px-3 py-3 text-center bg-red-800">{{ dest }}</th>
+              }
+              <th scope="col" class="px-3 py-3 text-center bg-red-900">{{ t().reports.table.totalOut }}</th>
+              <th scope="col" class="px-3 py-3 text-center">{{ t().reports.table.finalStock }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            @for (row of data; track row.articleId) {
+              <tr class="hover:bg-slate-50 text-sm">
+                <td class="px-3 py-3 font-medium text-slate-900">{{ row.articleName }}</td>
+                <td class="px-3 py-3">{{ row.articleCode }}</td>
+                <td class="px-3 py-3 text-center">{{ row.stockInitial }}</td>
+                <td class="px-3 py-3 text-center text-green-600 bg-green-50">{{ row.totalIn }}</td>
+                @for(dest of reportDestinations(); track dest) {
+                   <td class="px-3 py-3 text-center text-red-600 bg-red-50">{{ row.destinations[dest] || 0 }}</td>
+                }
+                <td class="px-3 py-3 text-center font-bold text-red-700 bg-red-100">{{ row.totalOut }}</td>
+                <td class="px-3 py-3 text-center font-bold text-indigo-700">{{ row.stockFinal }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="text-center py-12 text-slate-500">
+          <p>{{ t().reports.noData }}</p>
+        </div>
+      }
+    } @else {
+      <div class="text-center py-12 text-slate-500">
+        <p>{{ t().reports.generatePrompt }}</p>
+      </div>
+    }
+  </div>
+
+  @if (reportData() && reportData()!.length > 0) {
+    <div class="space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow-md">
+          <h2 class="text-xl font-semibold text-slate-800 mb-4">Analyses Spécifiques</h2>
+          <div class="flex gap-4">
+              <button (click)="generateOutgoingAnalysis()" [disabled]="filterForm.invalid" class="px-4 py-2.5 bg-sky-600 text-white font-semibold rounded-md hover:bg-sky-700 transition-colors shadow-sm disabled:bg-sky-300">{{ t().reports.analyzeOutgoing }}</button>
+          </div>
+      </div>
+
+      @if(outgoingAnalysisData(); as data) {
+        <div class="overflow-x-auto bg-white rounded-xl shadow-md">
+          <div class="p-4">
+              <h2 class="text-xl font-semibold text-slate-800 mb-4">{{ t().reports.outgoingAnalysis.title }}</h2>
+              @if(data.length > 0) {
+              <table class="w-full text-sm text-left text-slate-500">
+                  <thead class="text-xs text-white uppercase bg-slate-800">
+                      <tr>
+                          <th scope="col" class="px-6 py-3">{{ t().reports.outgoingAnalysis.destination }}</th>
+                          <th scope="col" class="px-6 py-3 text-right">{{ t().reports.outgoingAnalysis.totalQuantity }}</th>
+                          <th scope="col" class="px-6 py-3 text-right">{{ t().reports.outgoingAnalysis.totalValue }}</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      @for(row of data; track row.destination) {
+                      <tr class="bg-white border-b border-slate-200 even:bg-slate-50 hover:bg-slate-100">
+                          <td class="px-6 py-4 font-medium text-slate-900">{{ row.destination }}</td>
+                          <td class="px-6 py-4 text-right">{{ row.totalQuantity }}</td>
+                          <td class="px-6 py-4 text-right">{{ row.totalValue.toFixed(2) }} {{ t().common.currency }}</td>
+                      </tr>
+                      }
+                  </tbody>
+              </table>
+              } @else {
+                  <div class="text-center py-12 text-slate-500">
+                      <p>{{ t().reports.noData }}</p>
+                  </div>
+              }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
