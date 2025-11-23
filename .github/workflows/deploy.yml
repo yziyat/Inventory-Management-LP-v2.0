@@ -1,15 +1,14 @@
-name: Deploy to GitHub Pages
+name: Deploy Angular App to GitHub Pages
 
 on:
-  # Se déclenche à chaque push sur la branche main
   push:
     branches: [ main ]
-  # Permet de lancer l'action manuellement depuis l'onglet Actions de GitHub
   workflow_dispatch:
 
-# Autorise le workflow à écrire dans le dépôt pour créer la branche gh-pages
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
@@ -27,22 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Compile TypeScript entry file
-        run: npx tsc
-
-      - name: Prepare static files for deployment
-        run: |
-          # Copie tous les fichiers source (sauf les fichiers de configuration) dans le dossier de distribution
-          cp index.html metadata.json dist/
-          cp -r src dist/src
-
-          # Met à jour la base href dans index.html pour GitHub Pages
-          sed -i 's|<base href="/"|<base href="/Inventory-Management-LP-v2.0/"|' dist/index.html
+      - name: Build Angular App
+        # Construit l'application pour la production.
+        # Le --base-href est CRUCIAL pour que les liens fonctionnent sur GitHub Pages.
+        run: npx ng build --configuration production --base-href /Inventory-Management-LP-v2.0/
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        # C'est l'outil qui publie le site.
+        uses: angular-cli-ghpages/actions@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          # Conserve l'historique de déploiement
-          keep_files: false
+          # Le dossier de sortie de la commande "ng build"
+          dir: dist/inventory-management-lp-v2-0
