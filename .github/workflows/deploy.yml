@@ -1,44 +1,48 @@
-# Fichier: .github/workflows/deploy.yml
-name: Deploy Angular App to Pages
+name: Deploy to GitHub Pages
 
 on:
+  # Se déclenche à chaque push sur la branche main
   push:
-    branches:
-      - main # Exécuter le déploiement lorsque vous poussez sur la branche 'main'
-  workflow_dispatch: # Permet de lancer manuellement l'action depuis l'onglet Actions
+    branches: [ main ]
+  # Permet de lancer l'action manuellement depuis l'onglet Actions de GitHub
+  workflow_dispatch:
+
+# Autorise le workflow à écrire dans le dépôt pour créer la branche gh-pages
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Version LTS stable
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        # CORRECTION 1 : Ajout de --legacy-peer-deps pour résoudre l'erreur ERESOLVE
-        run: npm install --legacy-peer-deps 
+        run: npm install
 
-      - name: Build project
-        # Utilise la commande de build Angular standard
-        run: npm run build
+      - name: Compile TypeScript entry file
+        run: npx tsc
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      - name: Prepare static files for deployment
+        run: |
+          # Copie tous les fichiers source (sauf les fichiers de configuration) dans le dossier de distribution
+          cp index.html metadata.json dist/
+          cp -r src dist/src
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # CORRECTION 2 : Changement de 'build' à 'dist' (dossier de sortie standard d'Angular)
-          path: dist/inventory-management-lp-v2.0 
-          # NOTE : Le chemin Angular est souvent 'dist/nom-du-projet'. 
-          # Si 'dist' ne fonctionne pas, essayez 'dist/inventory-management-lp-v2.0' (basé sur le nom du repo).
-          # Si vous n'êtes pas sûr, essayez d'abord 'dist'.
+          # Met à jour la base href dans index.html pour GitHub Pages
+          sed -i 's|<base href="/"|<base href="/Inventory-Management-LP-v2.0/"|' dist/index.html
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Conserve l'historique de déploiement
+          keep_files: false
