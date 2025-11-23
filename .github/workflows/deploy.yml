@@ -1,0 +1,41 @@
+# Fichier: .github/workflows/deploy.yml
+name: Deploy Front-end App to Pages
+
+on:
+  push:
+    branches:
+      - main # Exécuter le déploiement lorsque vous poussez sur la branche 'main'
+  workflow_dispatch: # Permet de lancer manuellement l'action depuis l'onglet Actions
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Utilisez une version LTS stable de Node.js
+
+      - name: Install dependencies
+        run: npm install # Installe les dépendances listées dans package.json
+
+      - name: Build project
+        run: npm run build # Exécute la commande de build (ng build, react-scripts build, etc.)
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Assurez-vous que ce chemin correspond au dossier de sortie de votre commande 'npm run build'
+          # Pour React, c'est généralement 'build'. Pour Angular, c'est souvent 'dist/votre-nom-de-projet'.
+          # Si vous n'êtes pas sûr, laissez 'build' ou 'dist'.
+          path: build 
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
