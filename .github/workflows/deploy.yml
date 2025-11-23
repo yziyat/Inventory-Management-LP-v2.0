@@ -1,8 +1,8 @@
-name: Deploy Angular App to GitHub Pages
+name: Deploy Static Site to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -10,30 +10,33 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  build-and-deploy:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # IMPORTANT: Update base href for GitHub Pages sub-directory hosting
+      - name: Update base href
+        run: sed -i 's|<base href="/"|<base href="/Inventory-Management-LP-v2.0/"|' index.html
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Angular App
-        # Construit l'application pour la production.
-        # Le --base-href est CRUCIAL pour que les liens fonctionnent sur GitHub Pages.
-        run: npx ng build --configuration production --base-href /Inventory-Management-LP-v2.0/
+          # Upload the root directory, since there is no build step
+          path: '.'
 
       - name: Deploy to GitHub Pages
-        # C'est l'outil qui publie le site.
-        uses: angular-cli-ghpages/actions@v4
-        with:
-          # Le dossier de sortie de la commande "ng build"
-          dir: dist/inventory-management-lp-v2-0
+        id: deployment
+        uses: actions/deploy-pages@v4
