@@ -1,5 +1,5 @@
 # Fichier: .github/workflows/deploy.yml
-name: Deploy Front-end App to Pages
+name: Deploy Angular App to Pages
 
 on:
   push:
@@ -17,13 +17,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Utilisez une version LTS stable de Node.js
+          node-version: '20' # Version LTS stable
 
       - name: Install dependencies
-        run: npm install # Installe les dépendances listées dans package.json
+        # CORRECTION 1 : Ajout de --legacy-peer-deps pour résoudre l'erreur ERESOLVE
+        run: npm install --legacy-peer-deps 
 
       - name: Build project
-        run: npm run build # Exécute la commande de build (ng build, react-scripts build, etc.)
+        # Utilise la commande de build Angular standard
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -31,10 +33,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Assurez-vous que ce chemin correspond au dossier de sortie de votre commande 'npm run build'
-          # Pour React, c'est généralement 'build'. Pour Angular, c'est souvent 'dist/votre-nom-de-projet'.
-          # Si vous n'êtes pas sûr, laissez 'build' ou 'dist'.
-          path: build 
+          # CORRECTION 2 : Changement de 'build' à 'dist' (dossier de sortie standard d'Angular)
+          path: dist/inventory-management-lp-v2.0 
+          # NOTE : Le chemin Angular est souvent 'dist/nom-du-projet'. 
+          # Si 'dist' ne fonctionne pas, essayez 'dist/inventory-management-lp-v2.0' (basé sur le nom du repo).
+          # Si vous n'êtes pas sûr, essayez d'abord 'dist'.
 
       - name: Deploy to GitHub Pages
         id: deployment
