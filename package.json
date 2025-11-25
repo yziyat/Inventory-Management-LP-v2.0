@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "ng build",
-    "ng": "ng"
+    "ng": "ng",
+    "build": "ng build"
   },
   "dependencies": {
     "@angular/common": "^18.0.0",
@@ -16,9 +16,9 @@
     "rxjs": "~7.8.0"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^18.0.0",
     "@angular/cli": "^18.0.0",
     "@angular/compiler-cli": "^18.0.0",
-    "angular-cli-ghpages": "^2.0.0",
     "typescript": "~5.4.2"
   }
 }
